@@ -1,0 +1,6 @@
+{
+  "name": "email-generator",
+  "scripts": {
+    "start": "python -m http.server 3000"
+  }
+}

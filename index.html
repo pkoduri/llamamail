@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Email Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .form-section {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .generate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .clear-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .output-section {
+            padding: 0 40px 40px 40px;
+        }
+        
+        .output-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            display: none;
+        }
+        
+        .output-box.show {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        
+        .copy-btn:hover {
+            background: #218838;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .config-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .config-group > div {
+            flex: 1;
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✉️ AI Email Generator</h1>
+            <p>Create professional emails with AI assistance</p>
+        </div>
+        
+        <div class="config-section">
+            <div class="config-group">
+                <div>
+                    <label for="ollamaUrl">Ollama URL:</label>
+                    <input type="text" id="ollamaUrl" value="https://9aee709be09a.ngrok-free.app" placeholder="http://your-public-ip:11434">
+                </div>
+                <div>
+                    <label for="model">Model:</label>
+                    <select id="model">
+                        <option value="llama2">Llama 2</option>
+                        <option value="mistral">Mistral</option>
+                        <option value="codellama">CodeLlama</option>
+                        <option value="llama3">Llama 3</option>
+                        <option value="phi">Phi</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="form-group">
+                <label for="emailType">Email Type:</label>
+                <select id="emailType">
+                    <option value="professional">Professional Business</option>
+                    <option value="follow-up">Follow-up</option>
+                    <option value="introduction">Introduction</option>
+                    <option value="thank-you">Thank You</option>
+                    <option value="apology">Apology</option>
+                    <option value="meeting-request">Meeting Request</option>
+                    <option value="sales">Sales Pitch</option>
+                    <option value="casual">Casual</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="recipient">Recipient:</label>
+                <input type="text" id="recipient" placeholder="e.g., John Smith, CEO">
+            </div>
+            
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" placeholder="Email subject line">
+            </div>
+            
+            <div class="form-group">
+                <label for="context">Context/Details:</label>
+                <textarea id="context" placeholder="Provide context, key points, or specific details you want to include in the email..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="tone">Tone:</label>
+                <select id="tone">
+                    <option value="professional">Professional</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="formal">Formal</option>
+                    <option value="casual">Casual</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="apologetic">Apologetic</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button class="generate-btn" onclick="generateEmail()">Generate Email</button>
+                <button class="clear-btn" onclick="clearForm()">Clear Form</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Generating your email...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="output-section">
+            <div class="output-box" id="output"></div>
+            <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()" style="display: none;">Copy Email</button>
+        </div>
+    </div>
+
+    <script>
+        async function generateEmail() {
+            const generateBtn = document.querySelector('.generate-btn');
+            const loading = document.getElementById('loading');
+            const output = document.getElementById('output');
+            const error = document.getElementById('error');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            // Get form values
+            const ollamaUrl = document.getElementById('ollamaUrl').value.trim();
+            const model = document.getElementById('model').value;
+            const emailType = document.getElementById('emailType').value;
+            const recipient = document.getElementById('recipient').value;
+            const subject = document.getElementById('subject').value;
+            const context = document.getElementById('context').value;
+            const tone = document.getElementById('tone').value;
+            
+            // Validation
+            if (!ollamaUrl || !context) {
+                showError('Please fill in the Ollama URL and context fields.');
+                return;
+            }
+            
+            // Show loading state
+            generateBtn.disabled = true;
+            loading.classList.add('show');
+            output.classList.remove('show');
+            error.classList.remove('show');
+            copyBtn.style.display = 'none';
+            
+            try {
+                // Build the prompt
+                let prompt = `Write a ${tone} ${emailType} email`;
+                if (recipient) prompt += ` to ${recipient}`;
+                if (subject) prompt += ` with the subject "${subject}"`;
+                prompt += `.\n\nContext: ${context}\n\n`;
+                prompt += `Please write a complete, well-structured email that is ${tone} in tone. Include appropriate greetings and closing.`;
+                
+                // Make request to Ollama
+                const response = await fetch(`${ollamaUrl}/api/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        prompt: prompt,
+                        stream: false
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.response) {
+                    output.textContent = data.response;
+                    output.classList.add('show');
+                    copyBtn.style.display = 'block';
+                } else {
+                    throw new Error('No response received from AI model');
+                }
+                
+            } catch (err) {
+                console.error('Error:', err);
+                showError(`Failed to generate email: ${err.message}\n\nMake sure:\n1. Ollama is running on your local machine\n2. Your local machine is accessible from the internet\n3. The Ollama URL is correct\n4. The selected model is installed in Ollama`);
+            } finally {
+                generateBtn.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+        
+        function clearForm() {
+            document.getElementById('recipient').value = '';
+            document.getElementById('subject').value = '';
+            document.getElementById('context').value = '';
+            document.getElementById('emailType').selectedIndex = 0;
+            document.getElementById('tone').selectedIndex = 0;
+            document.getElementById('output').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('copyBtn').style.display = 'none';
+        }
+        
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.classList.add('show');
+        }
+        
+        async function copyToClipboard() {
+            const output = document.getElementById('output');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            try {
+                await navigator.clipboard.writeText(output.textContent);
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                copyBtn.style.background = '#007bff';
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '#28a745';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                showError('Failed to copy to clipboard');
+            }
+        }
+        
+        // Allow Enter key to generate email when in textarea
+        document.getElementById('context').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                generateEmail();
+            }
+        });
+        
+        // Load saved Ollama URL from localStorage
+        const savedUrl = localStorage.getItem('ollamaUrl');
+        if (savedUrl) {
+            document.getElementById('ollamaUrl').value = savedUrl;
+        }
+        
+        // Save Ollama URL to localStorage when changed
+        document.getElementById('ollamaUrl').addEventListener('change', function() {
+            localStorage.setItem('ollamaUrl', this.value);
+        });
+    </script>
+</body>
+</html>
